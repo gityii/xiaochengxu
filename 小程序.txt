@@ -1,0 +1,21 @@
+
+参数：
+字段名称	字段说明	      类型	   必填	     备注
+uin         用户uin        string       Y        QQ用户：QQ号码 微信用户：微信openid'
+title       文章标题       string       Y 
+content     内容           string       Y
+type        用户类型      string        Y         类型 1：微信用户 2：QQ用户',
+
+$.ajax({
+        url:"http://www.saimeil.com/xcxapi/user",
+        type:'post',//get也可以
+        dataType:'json',
+        data:{'uin':'123qwer','title':'猪上树了','content':'过年杀猪，猪上树了','type':'1'},  
+        success:function(result){
+            console.log(result);
+        }
+    });
+
+
+
+
