@@ -158,78 +158,119 @@ class XcxapiController extends Controller {
 //    }
 //
 
-    public function actionUser()
+
+
+    public function actionUin()
     {
-        //$nick = Mod::app()->request->getParam('nick','');
-        $uin = Mod::app()->request->getParam('uin','');
-        $title = Mod::app()->request->getParam('title','');
-        $content = Mod::app()->request->getParam('content','');
-        $type = Mod::app()->request->getParam('type','');
-        $msg = array();
+        $res = array(
+            'code' => 0,
+            'msg' => '',
+            'contentid' => 0
+        );
+//        $nickcode = Mod::app()->request->getParam('nick', '');
+        $uincode = Mod::app()->request->getParam('uin', '');
+        $typecode = Mod::app()->request->getParam('type', '');
 
-        if ($title==''){
-            $msg[0] = 2;
-            $msg[1] = '请输入标题';
-        }else if (Input::strlen($title)>100){
-            $msg[1] = '称呼长度不能超过12个汉字';
-        }
+        $uin = urldecode($uincode);
+//        $nick = urldecode($nickcode);
+        $type = urldecode($typecode);
 
-//        if ($nick==''){
-//            $msg[0] = 2;
-//            $msg[1] = '请输入称呼';
-//        }else if (Input::strlen($nick)>24){
-//            $msg[1] = '称呼长度不能超过12个汉字';
+//        if ($nick == '') {
+//            $res['code'] = 2;
+//            $res['msg'] = '请输入昵称';
+//            return $res;
+//        } else if (Input::strlen($nick) > 24) {
+//            $res['msg'] = '昵称长度不能超过12个汉字';
+//            return $res;
 //        }
 
         if ($uin == '') {
-            $msg[0] = 3;
-            $msg[1] = '请输入用户uin';
+            $res['code'] = 3;
+            $res['msg'] = '请输入用户uin';
+            return $res;
         } else if (Input::strlen($uin) > 50) {
-            $msg[1] = '用户uin长度不能超过50个字节';
+            $res['msg'] = '用户uin长度不能超过50个字节';
+            return $res;
         }
 
-        if ($content==''){
-            $msg[0] = 4;
-            $msg[1] = '请输入内容';
-        }else if (Input::strlen($content)>4000){
-            $msg[1] = '内容长度不能超过2000个汉字';
+        if ($type == '') {
+            $res['code'] = 4;
+            $res['msg'] = '请输入类型';
+            return $res;
+        } else if ($type != 1 && $type != 2) {
+            $res['msg'] = '类型错误';
+            return $res;
         }
 
         if (Mod::app()->db->createCommand()->insert('t_user', array(
-           // 'nick' => $nick,
             'uin' => $uin,
             'type' => $type
         ))) {
         } else {
-            $msg[0] = 1;
-            $msg[1] = '插入失败';
+            $res['code'] = 1;
+            $res['msg'] = '插入失败';
         }
 
+          return $res;
+    }
 
-        $sql = 'select `uid` from `t_user` where `uin`=\''.$uin.'\'';
+
+
+    public function actionBaoliaoContent()
+    {
+        $return = array();
+        $res = array(
+            'code' => 0,
+            'msg' => '',
+            'contentid' => 0
+        );
+        $uincode = Mod::app()->request->getParam('uin', '');
+        $titlecode = Mod::app()->request->getParam('title', '');
+        $contentcode = Mod::app()->request->getParam('content', '');
+
+        $uin = urldecode($uincode);
+        $title = urldecode($titlecode);
+        $content = urldecode($contentcode);
+
+
+        $sqluin = 'select `uid` from `t_user` where `uin`=\'' . $uin . '\'';
+        $datauin = Mod::app()->db->createCommand($sqluin)->queryRow();
+        if (!$datauin) {
+            $return = $this ->actionUin();
+
+            if($return['code'] != 0)
+            {
+
+            }
+        }
+
+        $sql = 'select `uid`,`nick` from `t_user` where `uin`=\'' . $uin . '\'';
         $data = Mod::app()->db->createCommand($sql)->queryRow();
-        $sql1 ='show table status like \'t_content\'';
+        $sql1 = 'show table status like \'t_content\'';
         $table = Mod::app()->db->createCommand($sql1)->queryRow();
         if (Mod::app()->db->createCommand()->insert('t_content', array(
             'contentid' => $table['Auto_increment'],
-           // 'nick' => $nick,
+            'nick' => $data['nick'],
             'uin' => $uin,
             'uid' => $data['uid'],
             'content' => $content,
-            'title'=> $title
+            'title' => $title
         ))) {
-            echo $table['Auto_increment'];
+            $res['code'] = 0;
+            $res['msg'] = '插入成功';
+            $res['contentid'] = $table['Auto_increment'];
         } else {
-            $msg[0] = 5;
-            $msg[1] = '插入失败';
+            $res['code'] = 5;
+            $res['msg'] = '插入失败';
         }
-//        if($msg!='')
-//        {
-//            echo json_encode($msg);
-//        }else{
-//            echo $table['Auto_increment'];
-//        }
+
+        if(isset($_GET['callback'])){
+            echo  $_GET['callback'].'('.json_encode($res).')';
+        }else {
+            echo json_encode($res);
+        }
     }
+
 
 
     //上传图片
@@ -245,6 +286,8 @@ class XcxapiController extends Controller {
         $filename = '';
         $filename_mark = '';
         $size = 1024;
+
+
 //        if (empty($this->uid)){
 //            $msg = '请先登录再报料';
 //        }else {
@@ -278,8 +321,9 @@ class XcxapiController extends Controller {
                             if (!move_uploaded_file($_FILES[$name]["tmp_name"],$position.'/'.$filename)){
                                 $msg = '图片上传失败，请重新选择';
                             }
-//                            else {
-//                                $file = $position.'/'.$filename;
+                            else {
+                                $file = $position.'/'.$filename;
+                                $limg = '/'.$file;
 //                                $markfile = Image::watermark($file,'static/images/mark.png',$position.'/'.$filename_mark);
 //                                if ($markfile!=''){
 //                                    $obj = Mod::app()->CWaeStore;
@@ -293,7 +337,7 @@ class XcxapiController extends Controller {
 //                                }else {
 //                                    $msg = '上传失败。';
 //                                }
-//                            }
+                            }
                         }
                     }
                 }else {

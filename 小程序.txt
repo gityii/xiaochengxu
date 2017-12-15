@@ -6,16 +6,34 @@ title       文章标题       string       Y
 content     内容           string       Y
 type        用户类型      string        Y         类型 1：微信用户 2：QQ用户',
 
+
+
+
+saimeil.com/xcxapi/baoliaocontent?uin=23&&title=猪上树了&&content=过年了&&type=1&&nick=xixi
+
+
+跨域前端：
 $.ajax({
-        url:"http://www.saimeil.com/xcxapi/user",
-        type:'post',//get也可以
-        dataType:'json',
-        data:{'uin':'123qwer','title':'猪上树了','content':'过年杀猪，猪上树了','type':'1'},  
-        success:function(result){
-            console.log(result);
+        url:"http://www.saimeil.com/xcxapi/baoliaocontent",
+        type:'GET',
+        dataType:'jsonp',
+        jsonp:'callback',
+        data:{'nick':'uio9','uin':'45','title':'猪上树了','content':'过年杀猪，猪上树了吗','type':'1'},  
+        success:function(msg){
+            console.log(msg);
         }
     });
 
 
 
+$.ajax({
+        url:"http://www.saimeil.com/xcxapi/baoliaocontent",
+        type:'GET',
+        dataType:'jsonp',
+        jsonp:'callback',
+        data:{'uin':'45','title':'猪上树了','content':'过年杀猪，猪上树了吗','type':'1'},  
+        success:function(msg){
+            console.log(msg);
+        }
+    });
 

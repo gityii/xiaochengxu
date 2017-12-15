@@ -104,3 +104,20 @@ CREATE TABLE IF NOT EXISTS `t_content` (
 
 
 mysql中使用show table status 查看表信息
+
+客户提供了MySQL的环境，但是不支持中文，
+通过以下命令查看了MySQL的字符集
+连接上mysql服务，输入以下命令
+mysql>show variables like 'character_set%';
+
+
+服务重启：
+[root@izuf6egy22njyfrpvioiz1z lampp]# /opt/lampp/lampp restart
+Restarting XAMPP for Linux 7.1.9-0...
+XAMPP: Stopping Apache...ok.
+XAMPP: Stopping MySQL...ok.
+XAMPP: Stopping ProFTPD...ok.
+XAMPP: Starting Apache...ok.
+XAMPP: Starting MySQL...ok.
+XAMPP: Starting ProFTPD...ok.
+[root@izuf6egy22njyfrpvioiz1z lampp]# 
