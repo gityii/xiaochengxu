@@ -279,7 +279,7 @@ class XcxapiController extends Controller {
         $id = 's'.time().rand(1000,9999);
         $msg = '';
         $url = '';
-        $name = 'headImgUpload';
+        $name = 'pic';
         $types = 'jpg,jpeg,gif,png,bmp';
         $position = 'assets/upload/'.date('Ymd',time());
         $limit_size = true;
@@ -287,34 +287,7 @@ class XcxapiController extends Controller {
         $filename_mark = '';
         $size = 1024;
 
-            $files = array();
-            $success = 0;    //用户统计有多少张图片上传成功了
-/*
-            foreach ($_FILES as $item) {
-                $index = count($files);
 
-                $files[$index]['srcName'] = $item['name'];    //上传图片的原名字
-                $files[$index]['error'] = $item['error'];    //和该文件上传相关的错误代码
-                $files[$index]['size'] = $item['size'];        //已上传文件的大小，单位为字节
-                $files[$index]['type'] = $item['type'];        //文件的 MIME 类型，需要浏览器提供该信息的支持，例如"image/gif"
-                $files[$index]['success'] = false;            //这个用于标志该图片是否上传成功
-                $files[$index]['path'] = '';
-
-            }
-        $file_infor = var_export($_FILES,true);
-        file_put_contents("file_infor.php",$file_infor);
-            //将图片已json形式返回给js处理页面  ，这里大家可以改成自己的json返回处理代码
-            echo json_encode(array(
-                'total' => count($files),
-                'success' => $success,
-                'files' => $files,
-            ));
-
-*/
-
-
-        $file_infor = var_export($_FILES,true);
-        file_put_contents("file_infor.php",$file_infor);
 //        if (empty($this->uid)){
 //            $msg = '请先登录再报料';
 //        }else {
@@ -342,7 +315,7 @@ class XcxapiController extends Controller {
                         }
                         if ($filename==''){
                             $filename = date('YmdHis',time()).rand(0,999).'.'.$type;
-                            //$filename_mark = date('YmdHis',time()).rand(0,999).'_mark';
+                            $filename_mark = date('YmdHis',time()).rand(0,999).'_mark';
                         }
                         if ($msg=='') {
                             if (!move_uploaded_file($_FILES[$name]["tmp_name"],$position.'/'.$filename)){
@@ -351,7 +324,6 @@ class XcxapiController extends Controller {
                             else {
                                 $file = $position.'/'.$filename;
                                 $limg = '/'.$file;
-                                $msg = '图片上传成功';
 //                                $markfile = Image::watermark($file,'static/images/mark.png',$position.'/'.$filename_mark);
 //                                if ($markfile!=''){
 //                                    $obj = Mod::app()->CWaeStore;
@@ -371,29 +343,13 @@ class XcxapiController extends Controller {
                 }else {
                     $msg = '请选择要上传的图片';
                 }
-
-//        if(isset($_GET['callback'])){
-//            echo  $_GET['callback'].'('.json_encode($msg).')';
-//        }else {
-//            echo json_encode($msg);
-//        }
-
+            }
 //        }
 //        $this->renderPartial('upload',array(
 //            'id'=>$id,
 //            'msg'=>$msg,
 //            'url'=>$url
 //        ));
-
-echo json_encode(array(
-'msg' => $msg,
-//'success' => $success,
-//'files' => $files,
-));
-
-   }
-
-
-
+//    }
 
 }
