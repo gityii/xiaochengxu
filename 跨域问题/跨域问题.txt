@@ -1,0 +1,190 @@
+AJAX可以进行数据的异步请求，但对于文件和跨域问题却束手无策。
+
+Jsonp可以进行跨域数据的异步请求，但同样不能使用于文件。
+
+<form>表单可以进行跨域数据和文件的上传，但却会使页面跳转。
+
+
+那么如何同时实现“异步”+“跨域”+“文件”+“返回值”这几个特性呢？
+
+
+
+1、解决跨域+字符串+返回值的问题
+
+   使用ajax+jsonp的方式
+   
+   前端（在浏览器上console上可直接执行）：
+   
+   $.ajax({
+        url:"http://www.saimeil.com/xcxapi/baoliaocontent",
+        type:'GET',
+        dataType:'jsonp',
+        jsonp:'callback',
+        data:{'uin':'45','title':'猪上树了','content':'过年杀猪==，猪上树了吗','type':'1'},  
+        success:function(msg){
+            console.log(msg);
+        }
+    });
+
+	
+
+    php后端：
+	
+	    public function actionBaoliaoContent()
+    {
+        $res = array(
+            'code' => 0,
+            'msg' => '',
+            'contentid' => 0
+        );
+        $uincode = Mod::app()->request->getParam('uin', '');
+        $titlecode = Mod::app()->request->getParam('title', '');
+        $contentcode = Mod::app()->request->getParam('content', '');
+		$typecode = Mod::app()->request->getParam('type', '');
+
+        $uin = urldecode($uincode);
+        $title = urldecode($titlecode);
+        $content = urldecode($contentcode);
+		$type = urldecode($typecode);
+		
+		
+        if(isset($_GET['callback'])){
+            echo  $_GET['callback'].'('.json_encode($res).')';
+        }else {
+            echo json_encode($res);
+        }
+    }
+
+	浏览器上的返回值为： {code: 0, msg: "插入成功", contentid: "28"}
+	
+	
+	
+	1、解决跨域+文件上传+返回值的问题
+	
+	实际上，返回值是没有的，也就是只能上传文件，返回值的问题以后再看
+	
+	html文件见ajaxuploadfile.html文件
+	
+	php后端：
+	
+	
+    //上传图片，当前没有多图上传
+    public function actionUploadImg(){
+
+        $id = 's'.time().rand(1000,9999);
+        $msg = '';
+        $url = '';
+        $name = 'headImgUpload';
+        $types = 'jpg,jpeg,gif,png,bmp';
+        $position = 'assets/upload/'.date('Ymd',time());
+        $limit_size = true;
+        $filename = '';
+        $filename_mark = '';
+        $size = 1024;
+
+            $files = array();
+            $success = 0;    //用户统计有多少张图片上传成功了
+/*
+            foreach ($_FILES as $item) {
+                $index = count($files);
+
+                $files[$index]['srcName'] = $item['name'];    //上传图片的原名字
+                $files[$index]['error'] = $item['error'];    //和该文件上传相关的错误代码
+                $files[$index]['size'] = $item['size'];        //已上传文件的大小，单位为字节
+                $files[$index]['type'] = $item['type'];        //文件的 MIME 类型，需要浏览器提供该信息的支持，例如"image/gif"
+                $files[$index]['success'] = false;            //这个用于标志该图片是否上传成功
+                $files[$index]['path'] = '';
+
+            }
+        $file_infor = var_export($_FILES,true);
+        file_put_contents("file_infor.php",$file_infor);
+            //将图片已json形式返回给js处理页面  ，这里大家可以改成自己的json返回处理代码
+            echo json_encode(array(
+                'total' => count($files),
+                'success' => $success,
+                'files' => $files,
+            ));
+
+*/
+
+
+        $file_infor = var_export($_FILES,true);
+        file_put_contents("file_infor.php",$file_infor);
+                if (isset($_FILES[$name]["name"]) && $_FILES[$name]["name"]!='' && $_FILES[$name]["size"]>0){
+                    if ($_FILES[$name]["error"] > 0){
+                        $msg = '请选择要上传的图片';
+                    }else {
+                        if (!is_dir($position) && !mkdir($position,0755,true)){
+                            $msg = '上传失败';
+                        }
+                        $type = pathinfo($_FILES[$name]["name"],PATHINFO_EXTENSION);
+                        if ($msg=='' && !in_array(strtolower($type),explode(',',strtolower($types)))){
+                            $msg = '图片格式有误，允许图片格式：'.$types;
+                            @unlink($_FILES[$name]["tmp_name"]);
+                        }
+                        if ($msg=='' && $limit_size){
+                            $filesize = ceil($_FILES[$name]["size"]/1024);
+                            if ($filesize>$size){
+                                $msg = '图片大小不能超过1M';
+                            }
+                        }
+                        if ($filename==''){
+                            $filename = date('YmdHis',time()).rand(0,999).'.'.$type;
+                            //$filename_mark = date('YmdHis',time()).rand(0,999).'_mark';
+                        }
+                        if ($msg=='') {
+                            if (!move_uploaded_file($_FILES[$name]["tmp_name"],$position.'/'.$filename)){
+                                $msg = '图片上传失败，请重新选择';
+                            }
+                            else {
+                                $file = $position.'/'.$filename;
+                                $limg = '/'.$file;
+                                $msg = '图片上传成功';
+//                                $markfile = Image::watermark($file,'static/images/mark.png',$position.'/'.$filename_mark);
+//                                if ($markfile!=''){
+//                                    $obj = Mod::app()->CWaeStore;
+//                                    $re = $obj->fileUploadByName($markfile);
+//                                    if (is_string($re)){
+//                                        $url = $re;
+//                                        @unlink($file);
+//                                    }else {
+//                                        $msg = '上传失败（'.$re.'）';
+//                                    }
+//                                }else {
+//                                    $msg = '上传失败。';
+//                                }
+                            }
+                        }
+                    }
+                }else {
+                    $msg = '请选择要上传的图片';
+                }
+
+//        if(isset($_GET['callback'])){
+//            echo  $_GET['callback'].'('.json_encode($msg).')';
+//        }else {
+//            echo json_encode($msg);
+//        }
+
+//        }
+//        $this->renderPartial('upload',array(
+//            'id'=>$id,
+//            'msg'=>$msg,
+//            'url'=>$url
+//        ));
+
+echo json_encode(array(
+'msg' => $msg,
+//'success' => $success,
+//'files' => $files,
+));
+
+   }
+	
+	
+	
+	
+	
+	
+	
+	

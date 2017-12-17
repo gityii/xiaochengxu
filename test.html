@@ -1,0 +1,33 @@
+<html>
+<script type="text/javascript" src="jquery.min.js"></script> 
+ <script type="text/javascript" src="ajaxfileupload.js"></script>
+ 
+ <script type="text/javascript">
+ function ajaxFileUpload()
+{
+$.ajaxFileUpload
+(
+  {
+ url:'http://www.saimeil.com/xcxapi/uploadimg', //你处理上传文件的服务端
+ secureuri:false,
+ fileElementId:'img',
+ dataType: 'json',
+ success: function (data)
+ {
+alert(data.file_infor);
+ }
+ }
+ )
+  return false;
+  } 
+  </script>
+  
+  <body>
+  
+    <input id="img" type="file" size="45" name="img" class="input">
+  <button class="button" id="buttonUpload" onclick="return ajaxFileUpload();">Upload</button>
+  
+  </body>
+  </html>
+  
+  
