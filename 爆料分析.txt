@@ -1,0 +1,167 @@
+
+
+爆料状态表：
+
+
+
+CREATE TABLE IF NOT EXISTS `t_content_area` (
+  `careaid` int(11) NOT NULL AUTO_INCREMENT,
+  `areaid` int(11) NOT NULL DEFAULT '0' COMMENT '分区ID',
+  `contentid` int(11) NOT NULL DEFAULT '0' COMMENT '报料ID',
+  `ttitle` varchar(72) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '推荐标题',
+  `tcontent` varchar(3000) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '推荐内容',
+  `img` varchar(300) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '焦点图地址',
+  `orderindex` int(11) NOT NULL DEFAULT '0' COMMENT '排序字段',
+  `dateline` int(11) NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `uid` varchar(16) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0' COMMENT '添加管理员ID',
+  PRIMARY KEY (`careaid`),
+  UNIQUE KEY `areaid_2` (`areaid`,`contentid`),
+  KEY `areaid` (`areaid`,`contentid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='报料分区表' AUTO_INCREMENT=1522 ;
+
+
+
+
+CREATE TABLE IF NOT EXISTS `t_admin` (
+  `adminid` int(11) NOT NULL AUTO_INCREMENT COMMENT '管理员ID',
+  `qq` varchar(15) COLLATE utf8_unicode_ci NOT NULL COMMENT 'qq号',
+  `name` varchar(36) COLLATE utf8_unicode_ci NOT NULL COMMENT '姓名',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '账号状态 1正常 0无效',
+  PRIMARY KEY (`adminid`),
+  UNIQUE KEY `qq` (`qq`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='管理员表' AUTO_INCREMENT=8 ;
+
+
+
+
+CREATE TABLE IF NOT EXISTS `t_content` (
+  `contentid` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL DEFAULT '0' COMMENT '用户UID',
+  `qq` varchar(15) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0' COMMENT '用户QQ号',
+  `nick` varchar(36) COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '昵称',
+  `title` varchar(150) COLLATE utf8_unicode_ci NOT NULL COMMENT '报料标题，24个汉字限制',
+  `content` text COLLATE utf8_unicode_ci NOT NULL COMMENT '报料内容',
+  `images` varchar(3000) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '图片列表',
+  `video` varchar(150) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '视频地址',
+  `videoout` varchar(150) COLLATE utf8_unicode_ci DEFAULT '' COMMENT '视频输出地址',
+  `examine` tinyint(1) NOT NULL DEFAULT '0' COMMENT '审核状态 0未审核 1审核通过 2审核不通过',
+  `reason` varchar(360) COLLATE utf8_unicode_ci DEFAULT '' COMMENT ' 审核不通过的原因',
+  `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态 0待处理 1已回复 2已处理',
+  `dateline` int(11) NOT NULL DEFAULT '0' COMMENT '报料时间',
+  `recount` int(11) NOT NULL DEFAULT '0' COMMENT '回复数量',
+  `viewcount` int(11) NOT NULL DEFAULT '0' COMMENT '阅读数量',
+  `showstatus` tinyint(1) NOT NULL DEFAULT '1' COMMENT '显示状态 1普通 2隐藏',
+  PRIMARY KEY (`contentid`),
+  KEY `uid` (`uid`,`qq`,`examine`),
+  KEY `qq` (`qq`,`examine`),
+  KEY `examine` (`examine`,`showstatus`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='报料表' AUTO_INCREMENT=5546 ;
+
+
+
+网友：
+CREATE TABLE IF NOT EXISTS `t_content_comment` (
+  `commentid` int(11) NOT NULL AUTO_INCREMENT COMMENT '评论ID',
+  `contentid` int(11) NOT NULL COMMENT '报料ID',
+  `qq` varchar(15) COLLATE utf8_unicode_ci NOT NULL COMMENT '用户QQ号',
+  `nick` varchar(72) COLLATE utf8_unicode_ci NOT NULL COMMENT '用户昵称',
+  `content` varchar(3000) COLLATE utf8_unicode_ci NOT NULL COMMENT '评论内容',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '显示状态 1显示 0不显示 2待审核',
+  `dateline` int(11) NOT NULL DEFAULT '0' COMMENT '评论时间',
+  PRIMARY KEY (`commentid`),
+  KEY `contentid` (`contentid`),
+  KEY `contentid_2` (`contentid`,`status`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='报料评论表' AUTO_INCREMENT=13238 ;
+
+
+官方：
+CREATE TABLE IF NOT EXISTS `t_content_re` (
+  `reid` int(11) NOT NULL AUTO_INCREMENT,
+  `contentid` int(11) NOT NULL DEFAULT '0' COMMENT '报料ID',
+  `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态ID',
+  `title` varchar(72) COLLATE utf8_unicode_ci NOT NULL COMMENT '标题',
+  `content` text COLLATE utf8_unicode_ci NOT NULL COMMENT '报料内容',
+  `author` varchar(16) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0' COMMENT '回复人QQ',
+  `orderindex` int(11) NOT NULL DEFAULT '0' COMMENT '排序字段',
+  `dateline` int(11) NOT NULL DEFAULT '0' COMMENT '回复时间',
+  PRIMARY KEY (`reid`),
+  KEY `contentid` (`contentid`,`author`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='报料回复表' AUTO_INCREMENT=21 ;
+
+
+
+$sql0 = 'select `title`,`content`,`examine`,`status`,`dateline` from `t_content` where `contentid`=\''.$id.'\'';
+
+
+index.php   $list  
+
+SELECT A.`content`,B.`contentid`,B.`title`,B.`images`,B.`dateline`,B.`status`,B.`recount`,B.`viewcount` FROM `t_content_re` A left join `t_content` B on A.`contentid`=B.`contentid` where A.`status`=\'2\' and B.`examine`=\'1\' and `showstatus`=\'1\''.$where.' order by A.`reid` desc limit '.$start.','.$per:'SELECT `contentid`,`title`,`images`,`dateline`,`status`,`recount`,`viewcount` FROM `t_content` where `examine`=\'1\' and `showstatus`=\'1\''.$where.' order by `contentid` desc limit '.$start.','.$per;
+
+
+		文章
+			文章id                contentid
+			发布日期              dateline   
+			最近回复日期	      dateline  
+			回复数                recount     
+			阅读数                viewcount      
+			文章标题              title
+			文章内容              content
+
+			文章状态              status（集合）
+
+1.爆料列表接口(全部)
+参数：
+	类型	全部/热点	默认查询全部
+	页数	默认查询第一页
+	每页显示数量	默认每页显示20条
+
+
+            文章状态：	
+            		官方
+            			官方回复状态     status
+            			官方回复内容     content
+            			官方回复时间     dateline
+            			官方名称(id)     这个是什么
+            			官方头像         当前没有
+            
+            		网友(采纳)
+            			网友名称(id)     nick
+            			网友回复内容     content
+            			网友回复时间     dateline
+            			是否被采纳       这个字段从哪儿来
+            
+            		网友(未采纳)
+            			网友名称(id)      nick
+            			网友回复内容      content
+            			网友回复时间      dateline
+            			是否被采纳        这个字段从哪儿来
+            
+
+
+怎么区分是官方回复还是网友回复？
+
+t_content_comment 是网友回复的
+
+t_content_re 是官方回复的
+
+分页
+
+热点指什么？
+
+
+
+
+
+
+
+
+       
+
+
+
+
+
+
+
+
+

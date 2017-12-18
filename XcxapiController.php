@@ -272,9 +272,9 @@ class XcxapiController extends Controller {
     }
 
 
-
     //上传图片
-    public function actionUploadImg(){
+    public function actionUploadImg()
+    {
 
         $id = 's'.time().rand(1000,9999);
         $msg = '';
@@ -289,29 +289,6 @@ class XcxapiController extends Controller {
 
             $files = array();
             $success = 0;    //用户统计有多少张图片上传成功了
-/*
-            foreach ($_FILES as $item) {
-                $index = count($files);
-
-                $files[$index]['srcName'] = $item['name'];    //上传图片的原名字
-                $files[$index]['error'] = $item['error'];    //和该文件上传相关的错误代码
-                $files[$index]['size'] = $item['size'];        //已上传文件的大小，单位为字节
-                $files[$index]['type'] = $item['type'];        //文件的 MIME 类型，需要浏览器提供该信息的支持，例如"image/gif"
-                $files[$index]['success'] = false;            //这个用于标志该图片是否上传成功
-                $files[$index]['path'] = '';
-
-            }
-        $file_infor = var_export($_FILES,true);
-        file_put_contents("file_infor.php",$file_infor);
-            //将图片已json形式返回给js处理页面  ，这里大家可以改成自己的json返回处理代码
-            echo json_encode(array(
-                'total' => count($files),
-                'success' => $success,
-                'files' => $files,
-            ));
-
-*/
-
 
         $file_infor = var_export($_FILES,true);
         file_put_contents("file_infor.php",$file_infor);
@@ -394,6 +371,89 @@ echo json_encode(array(
    }
 
 
+
+    public function actionSelectAll()
+    {
+        $per = 20;
+        $arr[] =array();
+        $infolist[] =array();
+        $page = intval(Mod::app()->request->getParam('page',1));
+        if ($page<=0){
+            $page = 1;
+        }
+
+        $sql = 'SELECT count(*) FROM `t_content`';
+
+        $all = Mod::app()->db->createCommand($sql)->queryRow();
+        $count = $all['count(*)'];
+
+        $pages = ceil($count/$per);
+
+        if ($pages==0){
+            $pages = 1;
+        }
+        if ($page>$pages){
+            $page = $pages;
+        }
+
+        $sql = 'SELECT `contentid` FROM `t_content`';
+        $listid = Mod::app()->db->createCommand($sql)->queryAll();
+
+        $start = ($page-1)*$per;
+
+        foreach ($listid as $data)
+        {
+            $arr[] = $data['contentid'];
+        }
+
+        for($i=0;$i<$count;$i++)
+        {
+          $infolist[$i] = $this->actionInfo($arr[$i], $start, $per);
+        }
+
+        return  json_encode(array(
+            'infolist' => $infolist,
+            'pages' => $pages,
+            'count' => $count,
+        ));
+
+    }
+
+
+
+
+    public function actionInfo($contentid, $start, $per)
+    {
+
+        $office = '';
+        $comments = '';
+        $info = '';
+
+        if($contentid > 0)
+        {
+            $sql = 'SELECT `content`,`contentid`,`title`,`dateline`,`recount`,`viewcount` FROM `t_content` where `contentid`='.$contentid .'order by `contentid` desc limit '.$start.','.$per;
+            $info = Mod::app()->db->createCommand($sql)->queryRow();
+
+
+            /*官方回复*/
+            $sql2 = 'SELECT `title`,`content`,`dateline` FROM `t_content_re` where `contentid`='.$contentid.' order by `orderindex` asc';
+            $office = Mod::app()->db->createCommand($sql2)->queryAll();
+
+
+            //网友评论
+            $sql3 = 'SELECT `nick`,`content`,`dateline` FROM `t_content_comment` where `contentid`=\''. $contentid . '\' and `status`=\'1\' order by `commentid` asc';
+
+            $comments = Mod::app()->db->createCommand($sql3)->queryAll();
+
+        }
+
+        return  array(
+            'info' => $info,
+            'office' => $office,
+            'comments' => $comments,
+        );
+
+    }
 
 
 }

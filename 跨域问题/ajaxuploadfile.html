@@ -16,7 +16,7 @@ $(document).ready(function(){
 function ajaxHeadImgUpload(){
     //调用ajaxfileupload.js中的方法
     $.ajaxFileUpload({
-        url:'http://www.saimeil.com/xcxapi/uploadimg',//上传图片要提交到的PHP后台Action方法
+        url:'http://www.blt.com/xcxapi/uploadimg',//上传图片要提交到的PHP后台Action方法
         secureuri:false,//是否用安全提交，默认为false
         fileElementId:'headImgUpload',//file选择文件的框的id
         dataType:'json',//数据返回格式，如果用json，需要修改ajaxfileupload.js中的内容 eval("data = " + data ); -->data =jQuery.parseJSON(jQuery(data).text());
