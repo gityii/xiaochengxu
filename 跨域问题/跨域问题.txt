@@ -183,6 +183,22 @@ echo json_encode(array(
 	
 	
 	
+
+   $.ajax({
+        url:"http://www.blt.com/xcxapi/selectall",
+        type:'POST',
+        dataType:'json',
+        jsonp:'callback',
+        data:{'page':'1','per':'20','type':'1'},  
+        success:function(msg){
+            console.log(msg);
+        }
+    });
+
+
+
+
+
 	
 	
 	

@@ -374,18 +374,23 @@ echo json_encode(array(
 
     public function actionSelectAll()
     {
-        $per = 20;
         $arr[] =array();
         $infolist[] =array();
         $page = intval(Mod::app()->request->getParam('page',1));
+        $per = intval(Mod::app()->request->getParam('per',20));
+        $type = intval(Mod::app()->request->getParam('type',1));
+
+
         if ($page<=0){
             $page = 1;
         }
 
-        $sql = 'SELECT count(*) FROM `t_content`';
+        $sql = 'select count(*) from `t_content` where `type`='.$type.'';
 
         $all = Mod::app()->db->createCommand($sql)->queryRow();
+
         $count = $all['count(*)'];
+
 
         $pages = ceil($count/$per);
 
@@ -396,7 +401,7 @@ echo json_encode(array(
             $page = $pages;
         }
 
-        $sql = 'SELECT `contentid` FROM `t_content`';
+        $sql = 'select `contentid` from `t_content` where `type`='.$type.'';
         $listid = Mod::app()->db->createCommand($sql)->queryAll();
 
         $start = ($page-1)*$per;
@@ -406,15 +411,36 @@ echo json_encode(array(
             $arr[] = $data['contentid'];
         }
 
-        for($i=0;$i<$count;$i++)
+
+        for($i=$start; $i < $start + $per; $i++)
         {
-          $infolist[$i] = $this->actionInfo($arr[$i], $start, $per);
+
+         $infolist[$i] = $this->actionInfo($arr[$i+1]);
+
         }
 
-        return  json_encode(array(
+
+        if( $page < $pages )
+        {
+            $next = 1;
+            if($page == 1)
+            {
+                $last = 0;
+            } else{
+                $last = 1;
+            }
+        }else{
+            $next = 0;
+            $last = 0;
+        }
+
+
+        echo  json_encode( array(
             'infolist' => $infolist,
             'pages' => $pages,
             'count' => $count,
+            'next' => $next,
+            'last' => $last
         ));
 
     }
@@ -422,35 +448,39 @@ echo json_encode(array(
 
 
 
-    public function actionInfo($contentid, $start, $per)
+    public function actionInfo($contentid)
     {
 
-        $office = '';
-        $comments = '';
-        $info = '';
+        $office = array();
+        $commentsno = array();
+        $commentsyes = array();
+        $info = array();
+
 
         if($contentid > 0)
         {
-            $sql = 'SELECT `content`,`contentid`,`title`,`dateline`,`recount`,`viewcount` FROM `t_content` where `contentid`='.$contentid .'order by `contentid` desc limit '.$start.','.$per;
+            $sql = 'SELECT `content`,`contentid`,`title`,`dateline`,`recount`,`viewcount` FROM `t_content` where `contentid`='.$contentid .'';
             $info = Mod::app()->db->createCommand($sql)->queryRow();
 
-
             /*官方回复*/
-            $sql2 = 'SELECT `title`,`content`,`dateline` FROM `t_content_re` where `contentid`='.$contentid.' order by `orderindex` asc';
+            $sql2 = 'SELECT `title`,`content`,`dateline`, `status` FROM `t_content_re` where `contentid`=\''. $contentid . '\' order by `reid` asc';
             $office = Mod::app()->db->createCommand($sql2)->queryAll();
 
+            //网友评论（采纳）
+            $sql3 = 'SELECT `nick`,`content`,`dateline`  FROM `t_content_comment` where `contentid`=\''. $contentid . '\' and `status`=\'1\'and `accept`=\'1\' order by `commentid` asc';
+            $commentsyes = Mod::app()->db->createCommand($sql3)->queryAll();
 
-            //网友评论
-            $sql3 = 'SELECT `nick`,`content`,`dateline` FROM `t_content_comment` where `contentid`=\''. $contentid . '\' and `status`=\'1\' order by `commentid` asc';
-
-            $comments = Mod::app()->db->createCommand($sql3)->queryAll();
+            //网友评论（未采纳）
+            $sql4 = 'SELECT `nick`,`content`,`dateline` FROM `t_content_comment` where `contentid`=\''. $contentid . '\' and `status`=\'1\'and `accept`=\'0\' order by `commentid` asc';
+            $commentsno = Mod::app()->db->createCommand($sql4)->queryAll();
 
         }
 
         return  array(
             'info' => $info,
             'office' => $office,
-            'comments' => $comments,
+            'commentsno' => $commentsno,
+            'commentsyes' => $commentsyes,
         );
 
     }
